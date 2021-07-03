@@ -1,0 +1,45 @@
+import io
+import base64
+import json
+from PIL import Image
+
+
+
+def convert_coco_to_labelme(img_name): # convert json from midv500 to labelme, open and edit!
+    
+    'folder contains images and json with same name'
+    
+    # collect info for labelme-style jsons
+    img = Image.open(img_name)
+    h = img.size[1] # height
+    w = img.size[0] # width
+    path = img_name.split('/')[-1] # image path
+    json_path = img_name[:len(img_name)-3]+'json' # path to open json
+
+    with open(img_name, "rb") as image:
+        b64string = base64.b64encode(image.read()) # bytes repr of image  
+
+    with open(json_path) as f:
+        d = json.load(f)
+    points = d['quad'] # coordinate points of polygon
+      
+    # built dict? contains all labelmr fields
+    answer = {}
+    answer['version'] = '3.16.7'
+    answer['flags'] = {}
+    answer['shapes'] = [{'label': 'test',
+       'line_color': None,
+       'fill_color': None,
+       'points':points,
+       'shape_type': 'polygon',
+       'flags': {}}]
+    answer['lineColor'] = [0, 255, 0, 128]
+    answer['fillColor'] = [255, 0, 0, 128]
+    answer['imagePath'] = path
+    answer['imageData'] = b64string.decode("utf8") 
+    answer['imageHeight'] = h
+    answer['imageWidth'] = w
+    
+    # save json to file
+    with open(json_path, "w") as fp:
+        json.dump(answer , fp) 
